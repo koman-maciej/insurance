@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "express": "4.16.3",
+    "request": "^2.34",
+    "request-promise": "4.2.2",
+    "simple-node-logger": "0.93.40"
+  }
+}
