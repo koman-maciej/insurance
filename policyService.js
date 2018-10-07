@@ -187,7 +187,7 @@ var getPoliciesByUserName = (userName, res) => {
             if (404 == err.statusCode) {
                 res.statusCode = 404;
                 res.end();
-                return log.info('User with name: [', userName, '] not found');
+                return log.info('User with userName: [', userName, '] not found');
             }
 
             res.statusCode = 500;
