@@ -25,5 +25,5 @@ var server = api.listen(9998, '127.0.0.1', () => {
     var host = server.address().address;
     var port = server.address().port;
 
-    log.info('Starting OAuth2.0 service listening at http://', host, ':', port);
+    log.info('Starting OAuth2.0 service listening on http://', host, ':', port);
 });

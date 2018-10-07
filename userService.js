@@ -4,21 +4,16 @@ const log = require('simple-node-logger').createSimpleLogger();
 const oauthserver = require('oauth2-server');
 const inMemoryOAuthModel = require('./oAuthModel.js');
 
-const api = express()
+const api = express();
 
 const getUsersRequestUri = 'http://www.mocky.io/v2/5808862710000087232b75ac';
-
-// Assumptions:
-// name is unique (requirements)
-// api to the data should not change (contract)
-// id is unique
 
 api.oauth = oauthserver({
     model: inMemoryOAuthModel
 });
 api.use(api.oauth.errorHandler());
 
-api.get('/users/:userId', api.oauth.authorise(), (req, res) => {
+api.get('/rest/users/:userId', api.oauth.authorise(), (req, res) => {
     const requesterRole = req.user.role;
     const userId = req.params.userId;
     log.info('Handling get user by id: [', userId, ']');
@@ -30,6 +25,53 @@ api.get('/users/:userId', api.oauth.authorise(), (req, res) => {
         return log.info('Request with role: [', requesterRole, '] unauthorized');
     }
 
+    return getUserById(userId, res);
+});
+
+api.get('/rest/users', api.oauth.authorise(), (req, res) => {
+    const requesterRole = req.user.role;
+    const name = req.query.name;
+    log.info('Handling get user by name: [', name, ']');
+
+    if (requesterRole != inMemoryOAuthModel.JWT_ACCESS_TOKEN_ADMIN_ROLE &&
+        requesterRole != inMemoryOAuthModel.JWT_ACCESS_TOKEN_USER_ROLE) {
+        res.statusCode = 401;
+        res.end();
+        return log.info('Request with role: [', requesterRole, '] unauthorized');
+    }
+
+    if (!name) {
+        res.statusCode = 400;
+        res.end();
+        return log.info('Bad request on missing parameter [name]');
+    }
+
+    return getUserByName(name, res);
+});
+
+api.get('/rest/internal/users/:userId', (req, res) => {
+    const userId = req.params.userId;
+    log.info('Handling internal get user by id: [', userId, ']');
+
+    return getUserById(userId, res);
+});
+
+api.get('/rest/internal/users', (req, res) => {
+    const name = req.query.name;
+    log.info('Handling internal get user by name: [', name, ']');
+
+    if (!name) {
+        res.statusCode = 400;
+        res.end();
+        return log.info('Bad request on missing parameter [name]');
+    }
+
+    return getUserByName(name, res);
+});
+
+/*******************************************************************************/
+
+var getUserById = (userId, res) => {
     request({
             method: 'GET',
             uri: getUsersRequestUri,
@@ -53,26 +95,9 @@ api.get('/users/:userId', api.oauth.authorise(), (req, res) => {
             res.end();
             return log.error('Internal server error: ', err);
         });
-});
+};
 
-api.get('/users', api.oauth.authorise(), (req, res) => {
-    const requesterRole = req.user.role;
-    const name = req.query.name;
-    log.info('Handling get user by name: [', name, ']');
-
-    if (requesterRole != inMemoryOAuthModel.JWT_ACCESS_TOKEN_ADMIN_ROLE &&
-        requesterRole != inMemoryOAuthModel.JWT_ACCESS_TOKEN_USER_ROLE) {
-        res.statusCode = 401;
-        res.end();
-        return log.info('Request with role: [', requesterRole, '] unauthorized');
-    }
-
-    if (!name) {
-        res.statusCode = 400;
-        res.end();
-        return log.info('Bad request on missing parameter [name]');
-    }
-
+var getUserByName = (name, res) => {
     request({
             method: 'GET',
             uri: getUsersRequestUri,
@@ -96,11 +121,11 @@ api.get('/users', api.oauth.authorise(), (req, res) => {
             res.end();
             return log.error('Internal server error: ', err);
         });
-});
+};
 
 var server = api.listen(8001, '127.0.0.1', () => {
     var host = server.address().address;
     var port = server.address().port;
 
-    log.info('Starting user service listening at http://', host, ':', port);
+    log.info('Starting user service listening on http://', host, ':', port);
 });

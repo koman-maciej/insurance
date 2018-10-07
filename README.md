@@ -11,3 +11,14 @@
 - Choose your favourite text editor for develop
 - Install dependencies via `npm install`
 - Run each microservice by typing e.g.: `nodejs userService`
+
+## Run it
+
+TBD
+
+## Assumptions
+
+- id's are unique
+- the user name field is unique
+- datasource API does not change (contract)
+
