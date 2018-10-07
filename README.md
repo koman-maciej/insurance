@@ -10,15 +10,36 @@
 
 - Choose your favourite text editor for develop
 - Install dependencies via `npm install`
-- Run each microservice by typing e.g.: `nodejs userService`
+- Run each microservice by typing e.g.:
+```shell
+nodejs authorizeService
+nodejs userService
+nodejs policyService
+```
+- Make sure you have available following ports: `9998`, `8001` and `8002`
 
 ## Run it
 
 TBD
 
+OAUTH
+http://localhost:9998/api-docs/
+
+User Service
+http://localhost:8001/api-docs/
+
+Policy Service
+http://localhost:8002/api-docs/
+
+
+
 ## Assumptions
 
-- id's are unique
-- the user name field is unique
-- datasource API does not change (contract)
+- Id's are unique
+- The user name field is unique
+- Datasource API does not change (contract)
 
+## TODO
+
+- Unit tests
+- Integration tests

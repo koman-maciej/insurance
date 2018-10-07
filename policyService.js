@@ -2,6 +2,8 @@ const express = require('express');
 const request = require('request-promise');
 const log = require('simple-node-logger').createSimpleLogger();
 const oauthserver = require('oauth2-server');
+const path = require('path');
+const swaggerJsdoc = require('swagger-jsdoc');
 const inMemoryOAuthModel = require('./oAuthModel.js');
 
 const api = express();
@@ -13,7 +15,82 @@ api.oauth = oauthserver({
     model: inMemoryOAuthModel
 });
 api.use(api.oauth.errorHandler());
+api.use('/api-docs', express.static(path.join(__dirname, './swagger-ui')));
 
+/**
+ * @swagger
+ * definition:
+ *   UserResponse:
+ *     required:
+ *       - id
+ *       - name
+ *       - email
+ *       - role
+ *     properties:
+ *       id:
+ *         type: string
+ *         default: e8fd159b-57c4-4d36-9bd7-a59ca13057bb
+ *       name:
+ *         type: string
+ *         default: Manning
+ *       email:
+ *         type: string
+ *         default: manningblankenship@quotezart.com
+ *       role:
+ *         type: string
+ *         default: admin
+ *   PolicyResponse:
+ *     required:
+ *       - id
+ *       - amountInsured
+ *       - email
+ *       - inceptionDate
+ *       - installmentPayment
+ *       - clientId
+ *     properties:
+ *       id:
+ *         type: string
+ *         default: 7b624ed3-00d5-4c1b-9ab8-c265067ef58b
+ *       amountInsured:
+ *         type: float
+ *         default: 399.89
+ *       email:
+ *         type: string
+ *         default: inesblankenship@quotezart.com
+ *       inceptionDate:
+ *         type: string
+ *         default: 2015-07-06T06:55:49Z
+ *       installmentPayment:
+ *         type: boolean
+ *         default: true
+ *       clientId:
+ *         type: string
+ *         default: a0ece5db-cd14-4f21-812f-966633e7be86
+ */
+
+/**
+ * @swagger
+ * /rest/policies:
+ *   get:
+ *     tags:
+ *       - Policy management
+ *     description: Get policies by userName
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: userName
+ *         description: user name
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Policies
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/PolicyResponse'
+ */
 api.get('/rest/policies', api.oauth.authorise(), (req, res) => {
     const requesterRole = req.user.role;
     const userName = req.query.userName;
@@ -34,6 +111,27 @@ api.get('/rest/policies', api.oauth.authorise(), (req, res) => {
     return getPoliciesByUserName(userName, res);
 });
 
+/**
+ * @swagger
+ * /rest/policies/{policyId}/user:
+ *   get:
+ *     tags:
+ *       - Policy management
+ *     description: Get user by policyId
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: policyId
+ *         description: policy id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: User
+ *         schema:
+ *           $ref: '#/definitions/UserResponse'
+ */
 api.get('/rest/policies/:policyId/user', api.oauth.authorise(), (req, res) => {
     const requesterRole = req.user.role;
     const policyId = req.params.policyId;
@@ -48,7 +146,7 @@ api.get('/rest/policies/:policyId/user', api.oauth.authorise(), (req, res) => {
     return getUserByPolicyId(policyId, res);
 });
 
-/**********************************************************************/
+
 
 var getPoliciesByUserName = (userName, res) => {
     request({
@@ -89,7 +187,7 @@ var getPoliciesByUserName = (userName, res) => {
             if (404 == err.statusCode) {
                 res.statusCode = 404;
                 res.end();
-                return log.info('User with name: [', name, '] not found');
+                return log.info('User with name: [', userName, '] not found');
             }
 
             res.statusCode = 500;
@@ -149,4 +247,24 @@ var server = api.listen(8002, '127.0.0.1', () => {
     var port = server.address().port;
 
     log.info('Starting user service listening on http://', host, ':', port);
+});
+
+var swaggerDefinition = {
+    info: {
+        title: 'Policy Service API',
+        version: '1.0.0',
+        description: 'RESTful API with Swagger'
+    },
+    host: server.address + ':' + server.port,
+    basePath: '/'
+};
+
+var swaggerSpec = swaggerJsdoc({
+   swaggerDefinition: swaggerDefinition,
+   apis: [path.basename(__filename)]
+});
+
+api.get('/swagger.json', function(request, response) {
+    response.set('Content-Type', 'application/json');
+    response.send(swaggerSpec);
 });

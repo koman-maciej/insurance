@@ -2,6 +2,8 @@ const express = require('express');
 const request = require('request-promise');
 const log = require('simple-node-logger').createSimpleLogger();
 const oauthserver = require('oauth2-server');
+const path = require('path');
+const swaggerJsdoc = require('swagger-jsdoc');
 const inMemoryOAuthModel = require('./oAuthModel.js');
 
 const api = express();
@@ -12,7 +14,53 @@ api.oauth = oauthserver({
     model: inMemoryOAuthModel
 });
 api.use(api.oauth.errorHandler());
+api.use('/api-docs', express.static(path.join(__dirname, './swagger-ui')));
 
+/**
+ * @swagger
+ * definition:
+ *   UserResponse:
+ *     required:
+ *       - id
+ *       - name
+ *       - email
+ *       - role
+ *     properties:
+ *       id:
+ *         type: string
+ *         default: e8fd159b-57c4-4d36-9bd7-a59ca13057bb
+ *       name:
+ *         type: string
+ *         default: Manning
+ *       email:
+ *         type: string
+ *         default: manningblankenship@quotezart.com
+ *       role:
+ *         type: string
+ *         default: admin
+ */
+
+/**
+ * @swagger
+ * /rest/users/{userId}:
+ *   get:
+ *     tags:
+ *       - User management
+ *     description: Get user by userId
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: userId
+ *         description: user id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: User
+ *         schema:
+ *           $ref: '#/definitions/UserResponse'
+ */
 api.get('/rest/users/:userId', api.oauth.authorise(), (req, res) => {
     const requesterRole = req.user.role;
     const userId = req.params.userId;
@@ -28,6 +76,27 @@ api.get('/rest/users/:userId', api.oauth.authorise(), (req, res) => {
     return getUserById(userId, res);
 });
 
+/**
+ * @swagger
+ * /rest/users:
+ *   get:
+ *     tags:
+ *       - User management
+ *     description: Get user by name
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: name
+ *         description: user name
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: User
+ *         schema:
+ *           $ref: '#/definitions/UserResponse'
+ */
 api.get('/rest/users', api.oauth.authorise(), (req, res) => {
     const requesterRole = req.user.role;
     const name = req.query.name;
@@ -49,6 +118,27 @@ api.get('/rest/users', api.oauth.authorise(), (req, res) => {
     return getUserByName(name, res);
 });
 
+/**
+ * @swagger
+ * /rest/internal/users/{userId}:
+ *   get:
+ *     tags:
+ *       - Internal user management
+ *     description: Get user by userId
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: userId
+ *         description: user id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: User
+ *         schema:
+ *           $ref: '#/definitions/UserResponse'
+ */
 api.get('/rest/internal/users/:userId', (req, res) => {
     const userId = req.params.userId;
     log.info('Handling internal get user by id: [', userId, ']');
@@ -56,6 +146,27 @@ api.get('/rest/internal/users/:userId', (req, res) => {
     return getUserById(userId, res);
 });
 
+/**
+ * @swagger
+ * /rest/internal/users:
+ *   get:
+ *     tags:
+ *       - Internal user management
+ *     description: Get user by name
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: name
+ *         description: user name
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: User
+ *         schema:
+ *           $ref: '#/definitions/UserResponse'
+ */
 api.get('/rest/internal/users', (req, res) => {
     const name = req.query.name;
     log.info('Handling internal get user by name: [', name, ']');
@@ -69,7 +180,7 @@ api.get('/rest/internal/users', (req, res) => {
     return getUserByName(name, res);
 });
 
-/*******************************************************************************/
+
 
 var getUserById = (userId, res) => {
     request({
@@ -128,4 +239,24 @@ var server = api.listen(8001, '127.0.0.1', () => {
     var port = server.address().port;
 
     log.info('Starting user service listening on http://', host, ':', port);
+});
+
+var swaggerDefinition = {
+    info: {
+        title: 'User Service API',
+        version: '1.0.0',
+        description: 'RESTful API with Swagger'
+    },
+    host: server.address + ':' + server.port,
+    basePath: '/'
+};
+
+var swaggerSpec = swaggerJsdoc({
+   swaggerDefinition: swaggerDefinition,
+   apis: [path.basename(__filename)]
+});
+
+api.get('/swagger.json', function(request, response) {
+    response.set('Content-Type', 'application/json');
+    response.send(swaggerSpec);
 });
