@@ -8,8 +8,8 @@ const inMemoryOAuthModel = require('./oAuthModel.js');
 
 const api = express();
 
-const getPoliciesRequestUri = 'http://www.mocky.io/v2/580891a4100000e8242b75c5';
-const getUsersRequestUri = 'http://localhost:8001/rest/internal/users';
+const GET_POLICIES_REQUEST_URI = 'http://www.mocky.io/v2/580891a4100000e8242b75c5';
+const GET_USERS_REQUEST_URI = 'http://localhost:8001/rest/internal/users';
 
 api.oauth = oauthserver({
     model: inMemoryOAuthModel
@@ -151,7 +151,7 @@ api.get('/rest/policies/:policyId/user', api.oauth.authorise(), (req, res) => {
 var getPoliciesByUserName = (userName, res) => {
     request({
             method: 'GET',
-            uri: getUsersRequestUri,
+            uri: GET_USERS_REQUEST_URI,
             qs: {
                 name: userName
             },
@@ -160,7 +160,7 @@ var getPoliciesByUserName = (userName, res) => {
         .then((userResponse) => {
             request({
                     method: 'GET',
-                    uri: getPoliciesRequestUri,
+                    uri: GET_POLICIES_REQUEST_URI,
                     json: true
                 })
                 .then((policiesResponse) => {
@@ -200,7 +200,7 @@ var getUserByPolicyId = (policyId, res) => {
 
     request({
             method: 'GET',
-            uri: getPoliciesRequestUri,
+            uri: GET_POLICIES_REQUEST_URI,
             json: true
         })
         .then((policiesResponse) => {
@@ -209,7 +209,7 @@ var getUserByPolicyId = (policyId, res) => {
                     const userId = policiesResponse.policies[i].clientId;
                     return request({
                             method: 'GET',
-                            uri: getUsersRequestUri + '/' + userId,
+                            uri: GET_USERS_REQUEST_URI + '/' + userId,
                             json: true
                         })
                         .then((userResponse) => {
