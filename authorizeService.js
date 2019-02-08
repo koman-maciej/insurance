@@ -6,7 +6,7 @@ const path = require('path');
 const swaggerJsdoc = require('swagger-jsdoc');
 const inMemoryOAuthModel = require('./oAuthModel.js');
 
-var api = express();
+const api = express();
 
 api.use(bodyParser.urlencoded({
     extended: true
