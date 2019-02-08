@@ -8,7 +8,7 @@ const inMemoryOAuthModel = require('./oAuthModel.js');
 
 const api = express();
 
-const getUsersRequestUri = 'http://www.mocky.io/v2/5808862710000087232b75ac';
+const GET_USERS_REQUEST_URI = 'http://www.mocky.io/v2/5808862710000087232b75ac';
 
 api.oauth = oauthserver({
     model: inMemoryOAuthModel
@@ -185,7 +185,7 @@ api.get('/rest/internal/users', (req, res) => {
 var getUserById = (userId, res) => {
     request({
             method: 'GET',
-            uri: getUsersRequestUri,
+            uri: GET_USERS_REQUEST_URI,
             json: true
         })
         .then((response) => {
@@ -211,7 +211,7 @@ var getUserById = (userId, res) => {
 var getUserByName = (name, res) => {
     request({
             method: 'GET',
-            uri: getUsersRequestUri,
+            uri: GET_USERS_REQUEST_URI,
             json: true
         })
         .then((response) => {

@@ -9,17 +9,17 @@ model.JWT_ACCESS_TOKEN_ADMIN_ROLE = 'admin';
 const JWT_ISSUER = 'amaris';
 const JWT_SECRET_FOR_ACCESS_TOKEN = 'YMRqCXE49YVJqelG3bPQ';
 
-const getUsersRequestUri = 'http://www.mocky.io/v2/5808862710000087232b75ac';
-const generalUserPassword = 'qwerty';
+const GET_USERS_REQUEST_URI = 'http://www.mocky.io/v2/5808862710000087232b75ac';
+const GENERAL_USER_PASSWORD = 'qwerty';
 
-const oauthClients = [{
+const OAUTH_CLIENTS = [{
     clientId: 'amaris',
     clientSecret: 'amarissecret',
 }];
 
 // key is grant_type
 // value is the array of authorized clientId's
-const authorizedClientIds = {
+const AUTHORIZED_CLIENT_IDS = {
     password: ['amaris']
 };
 
@@ -66,8 +66,8 @@ model.saveAccessToken = (accessToken, clientId, expires, username, callback) => 
 };
 
 model.getClient = (clientId, clientSecret, callback) => {
-    for (var i = 0, len = oauthClients.length; i < len; i++) {
-        var elem = oauthClients[i];
+    for (var i = 0, len = OAUTH_CLIENTS.length; i < len; i++) {
+        var elem = OAUTH_CLIENTS[i];
         if (elem.clientId === clientId &&
             (clientSecret === null || elem.clientSecret === clientSecret)) {
             return callback(false, elem);
@@ -77,20 +77,20 @@ model.getClient = (clientId, clientSecret, callback) => {
 };
 
 model.grantTypeAllowed = (clientId, grantType, callback) => {
-    callback(false, authorizedClientIds[grantType] &&
-        authorizedClientIds[grantType].indexOf(clientId.toLowerCase()) >= 0);
+    callback(false, AUTHORIZED_CLIENT_IDS[grantType] &&
+        AUTHORIZED_CLIENT_IDS[grantType].indexOf(clientId.toLowerCase()) >= 0);
 };
 
 model.getUser = (username, password, callback) => {
 
     request({
             method: 'GET',
-            uri: getUsersRequestUri,
+            uri: GET_USERS_REQUEST_URI,
             json: true
         })
         .then((response) => {
             for (var i = 0, len = response.clients.length; i < len; ++i) {
-                if (username == response.clients[i].email && password == generalUserPassword) {
+                if (username == response.clients[i].email && password == GENERAL_USER_PASSWORD) {
                     return callback(false, response.clients[i]);
                 }
             }
